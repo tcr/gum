@@ -101,12 +101,12 @@ JS_VAL JS_ADD_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 
 typedef JS_VAL (*js_func)(JS_VAL, ...);
 
-#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(__VA_ARGS__);
+#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL, __VA_ARGS__);
 
 #define JS_CALL_METHOD(OBJ, NAME, ...) ({ \
 	JS_VAL* value; \
 	hashmap_get(OBJ.object, NAME, (void **)(&value)); \
-	((js_func) value->function)(__VA_ARGS__);  \
+	((js_func) value->function)(OBJ, __VA_ARGS__);  \
 	})
 
 #define JS_SET_PROP(OBJ, NAME, VAL) hashmap_put(OBJ.object, NAME, VAL);
@@ -120,7 +120,9 @@ typedef JS_VAL (*js_func)(JS_VAL, ...);
 
 #define JS_ARG(NAME) JS_VAL NAME = va_arg(argp, JS_VAL);
 
-#define JS_DEFN(NAME) JS_VAL NAME (JS_VAL this, ...)
+#define JS_DEFN(NAME) JS_VAL _js_fn_ ## NAME (JS_VAL, ...); \
+	JS_VAL NAME = JS_FUNCTION(_js_fn_ ## NAME); \
+	JS_VAL _js_fn_ ## NAME (JS_VAL this, ...)
 
 /******
 
@@ -128,7 +130,8 @@ typedef JS_VAL (*js_func)(JS_VAL, ...);
 
 *********/
 
-JS_DEFN(console_log) { JS_ARGS(JS_ARG(str));
+JS_DEFN(console_log) {
+	JS_ARGS(JS_ARG(str));
 	switch (str.tag) {
 		case JS_NUMBER_TAG: printf("%f", str.number); break;
 		case JS_STRING_TAG: printf("%s", str.string); break;
@@ -140,28 +143,29 @@ JS_DEFN(console_log) { JS_ARGS(JS_ARG(str));
 	return JS_NULL;
 }
 
+JS_VAL console;
+
+void initialze_globals() {
+	// Setup console.
+	console = JS_OBJECT();
+	JS_SET_PROP(console, "log", &console_log);
+}
+
 /**
  * Your Main
  */
 
-JS_VAL console;
-
-JS_DEFN(addthese) { JS_ARGS(JS_ARG(a) JS_ARG(b));
-	((js_func) console_log)(JS_NULL, JS_ADD(a, b));
+JS_DEFN(addthese) {
+	JS_ARGS(JS_ARG(a) JS_ARG(b));
+	JS_CALL_FUNC(console_log, JS_ADD(a, b));
 }
 
 int main () {
-	// Setup console.
-	console = JS_OBJECT();
-	JS_VAL log = JS_FUNCTION(&console_log);
-	JS_SET_PROP(console, "log", &log);
+	initialze_globals();
 
-	JS_VAL _a = JS_NUMBER(6), _b = JS_NUMBER(1);
-	JS_VAL _addthese = JS_FUNCTION(&addthese);
-	JS_CALL_FUNC(_addthese, JS_NULL, _a, _b);
-	_b = JS_STRING(" pence none the richer");
-	JS_CALL_FUNC(_addthese, JS_NULL, _a, _b);
-	JS_CALL_METHOD(console, "log", JS_NULL, JS_BOOL(false));
+	JS_CALL_FUNC(addthese, JS_NUMBER(6), JS_NUMBER(1));
+	JS_CALL_FUNC(addthese, JS_NUMBER(6), JS_STRING(" pence none the richer"));
+	JS_CALL_METHOD(console, "log", JS_BOOL(false));
 
 	JS_OBJECT_FREE(console);
 	return 0;
