@@ -101,12 +101,12 @@ JS_VAL JS_ADD_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 
 typedef JS_VAL (*js_func)(JS_VAL, ...);
 
-#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL, __VA_ARGS__);
+#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL, ## __VA_ARGS__);
 
 #define JS_CALL_METHOD(OBJ, NAME, ...) ({ \
 	JS_VAL* value; \
 	hashmap_get(OBJ.object, NAME, (void **)(&value)); \
-	((js_func) value->function)(OBJ, __VA_ARGS__);  \
+	((js_func) value->function)(OBJ, ## __VA_ARGS__);  \
 	})
 
 #define JS_SET_PROP(OBJ, NAME, VAL) hashmap_put(OBJ.object, NAME, VAL);
@@ -156,7 +156,7 @@ void initialze_globals() {
 }
 
 /**
- * Your Main
+ * Your Module
  */
 
 JS_DEFN(addthese) {
@@ -164,12 +164,16 @@ JS_DEFN(addthese) {
 	JS_CALL_FUNC(console_log, JS_ADD(a, b));
 }
 
-int main () {
-	initialze_globals();
-
+JS_DEFN(module_0) {
 	JS_CALL_FUNC(addthese, JS_NUMBER(6), JS_NUMBER(1));
 	JS_CALL_FUNC(addthese, JS_NUMBER(6), JS_STRING(" pence none the richer"));
 	JS_CALL_METHOD(console, "log", JS_BOOL(false));
+}
+
+int main () {
+	initialze_globals();
+
+	JS_CALL_FUNC(module_0);
 
 	JS_OBJECT_FREE(console);
 	return 0;
