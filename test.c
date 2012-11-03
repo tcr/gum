@@ -130,16 +130,20 @@ typedef JS_VAL (*js_func)(JS_VAL, ...);
 
 *********/
 
+char *JS_VAL_STR (JS_VAL val) {
+	switch (val.tag) {
+		case JS_NUMBER_TAG: return HPRINTF("%f", val.number);
+		case JS_STRING_TAG: return HPRINTF("%s", val.string);
+		case JS_BOOL_TAG: return HPRINTF("%s", val.boolean ? "true" : "false");
+		case JS_OBJECT_TAG: return HPRINTF("[object Object]");
+		case JS_FUNCTION_TAG: return HPRINTF("[function]");
+		default: return "null";
+	}
+}
+
 JS_DEFN(console_log) {
 	JS_ARGS(JS_ARG(str));
-	switch (str.tag) {
-		case JS_NUMBER_TAG: printf("%f", str.number); break;
-		case JS_STRING_TAG: printf("%s", str.string); break;
-		case JS_BOOL_TAG: printf("%s", str.boolean ? "true" : "false"); break;
-		case JS_OBJECT_TAG: printf("[object Object]"); break;
-		case JS_FUNCTION_TAG: printf("[function]"); break;
-	}
-	printf("\n");
+	printf("%s\n", JS_VAL_STR(str));
 	return JS_NULL;
 }
 
