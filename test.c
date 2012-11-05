@@ -1,15 +1,11 @@
 #include "gum.h"
 
-/**
- * Your Module
- */
-
 JS_DEFN(fac) {
 	VARGS(VARG(n));
-	if (JS_EQ(n, JS_NUMBER(1)) || JS_EQ(n, JS_NUMBER(0))) {
+	if (JS_BOOL(JS_OR(JS_BOOL(JS_EQ(n, JS_NUMBER(1))), JS_BOOL(JS_EQ(n, JS_NUMBER(0))))).boolean) {
 		return JS_NUMBER(1);
 	}
-	return JS_MUL(n, JS_CALL_FUNC(fac, JS_ADD(n, JS_NUMBER(-1))));
+	return JS_MUL(n, JS_CALL_FUNC(fac, JS_SUB(n, JS_NUMBER(1))));
 }
 
 JS_DEFN(module_0) {

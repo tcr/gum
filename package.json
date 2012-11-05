@@ -1,0 +1,9 @@
+{
+  "name": "gum",
+  "version": "0.0.1",
+  "description": "JavaScript -> C compiler",
+  "main": "compile.js",
+  "dependencies": {
+    "falafel": "~0.1.4"
+  },
+}

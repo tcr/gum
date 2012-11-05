@@ -8,20 +8,6 @@
 #define KEY_PREFIX ("somekey")
 #define KEY_COUNT (1024*1024)
 
-/*
-
-function fac(n) {
-	if (n == 1 || n == 0) {
-		return 1
-	}
-	return n * fac(n-1);
-}
-
-fac(5);
-
-*/
-
-
 // Heap printf
 
 #define HPRINTF(...) ({ \
@@ -79,7 +65,6 @@ const JS_VAL JS_NULL = ((JS_VAL) {JS_NULL_TAG});
 typedef bool (*js_op_ptr)(void **, JS_VAL, JS_VAL);
 typedef JS_VAL (*js_val_op_ptr)(void **, JS_VAL, JS_VAL);
 
-
 // operations
 
 #define JS_OP(THEOP, X, Y) ({ \
@@ -87,6 +72,7 @@ typedef JS_VAL (*js_val_op_ptr)(void **, JS_VAL, JS_VAL);
 		(*PTR)((void **) &PTR, X, Y); \
 	})
 
+// operator <
 bool JS_LT_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b);
 #define JS_LT_VARIANT(NAME, CHECK, RET) bool JS_LT_ ## NAME (void **op_cache_ptr, JS_VAL a, JS_VAL b) {\
 		return (CHECK) ? JS_LT_SWITCH(op_cache_ptr, a, b) : (RET) ? true : false; \
@@ -100,6 +86,7 @@ bool JS_LT_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 }
 #define JS_LT(A, B) JS_OP(JS_LT_NUMBER_NUMBER, A, B)
 
+// operator ==
 bool JS_EQ_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b);
 #define JS_EQ_VARIANT(NAME, CHECK, RET) bool JS_EQ_ ## NAME (void **op_cache_ptr, JS_VAL a, JS_VAL b) {\
 		return (CHECK) ? JS_EQ_SWITCH(op_cache_ptr, a, b) : (RET) ? true : false; \
@@ -113,11 +100,12 @@ bool JS_EQ_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 }
 #define JS_EQ(A, B) JS_OP(JS_EQ_NUMBER_NUMBER, A, B)
 
+// operator ||
 bool JS_OR_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b);
 #define JS_OR_VARIANT(NAME, CHECK, RET) bool JS_OR_ ## NAME (void **op_cache_ptr, JS_VAL a, JS_VAL b) {\
 		return (CHECK) ? JS_OR_SWITCH(op_cache_ptr, a, b) : (RET) ? true : false; \
 	}
-JS_OR_VARIANT(BOOL_BOOL, a.tag != b.tag, a.number == b.number);
+JS_OR_VARIANT(BOOL_BOOL, a.tag != b.tag, a.number || b.number);
 bool JS_OR_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 	if (a.tag == JS_BOOL_TAG && b.tag == JS_BOOL_TAG) {
 		*op_cache_ptr = &JS_OR_BOOL_BOOL;
@@ -149,6 +137,19 @@ JS_VAL JS_ADD_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
 	return ((js_val_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
 }
 #define JS_ADD(A, B) JS_VAL_OP(JS_ADD_DOUBLE_DOUBLE, A, B)
+
+JS_VAL JS_SUB_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b);
+#define JS_SUB_VARIANT(NAME, CHECK, RET) JS_VAL JS_SUB_ ## NAME (void **op_cache_ptr, JS_VAL a, JS_VAL b) {\
+		return (CHECK) ? JS_SUB_SWITCH(op_cache_ptr, a, b) : RET; \
+	}
+JS_SUB_VARIANT(DOUBLE_DOUBLE, a.tag != b.tag, JS_NUMBER(a.number - b.number));
+JS_VAL JS_SUB_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b) {
+	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
+		*op_cache_ptr = &JS_SUB_DOUBLE_DOUBLE;
+	}
+	return ((js_val_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
+}
+#define JS_SUB(A, B) JS_VAL_OP(JS_SUB_DOUBLE_DOUBLE, A, B)
 
 JS_VAL JS_MUL_SWITCH (void **op_cache_ptr, JS_VAL a, JS_VAL b);
 #define JS_MUL_VARIANT(NAME, CHECK, RET) JS_VAL JS_MUL_ ## NAME (void **op_cache_ptr, JS_VAL a, JS_VAL b) {\
