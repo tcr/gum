@@ -1,4 +1,4 @@
-# gum, JavaScript -> C macros
+# gum, a tiny JavaScript -> C compiler
 
 Cause I can't sleep at night.
 
