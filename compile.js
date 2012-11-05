@@ -1,22 +1,9 @@
+var fs = require('fs');
+
 var falafel = require('falafel');
 
-/**** SOURCE ****/
-
-function fac (n) {
-	if (n == 1 || n == 0) {
-		return 1;
-	}
-	return n * fac(n-1);
-}
-
-function module_0 () {
-	console.log(fac(5));
-}
-
-/**** COMPILER ****/
-
-function translate (fn) {
-	return falafel(String(fn), function (node) {
+function translate (src) {
+	return falafel(String(src), function (node) {
 		switch (node.type) {
 			case 'Literal':
 				switch (typeof node.value) {
@@ -52,11 +39,13 @@ function translate (fn) {
 					node.update('JS_CALL_FUNC(' + [node.callee.source()].concat(node.arguments.map(function (arg) { return arg.source(); })).join(', ') + ')');
 				}
 				break;
+			case 'Program':
+				node.update('#include "gum.h"\n\n' + node.source());
+				break;
 			case 'MemberExpression':
 			case 'BlockStatement':
 			case 'ReturnStatement':
 			case 'Identifier':
-			case 'Program':
 			case 'ExpressionStatement':
 				break;
 			default:
@@ -65,8 +54,4 @@ function translate (fn) {
 	});
 }
 
-console.log('#include "gum.h"')
-console.log()
-console.log(translate(fac));
-console.log()
-console.log(translate(module_0));
+console.log(translate(fs.readFileSync('source.js')));
