@@ -57,13 +57,15 @@ typedef JS_VAL (*js_func)(JS_VAL, ...);
  * Struct stuff
  */
 
-#define JS_NULL_TAG 0
-#define JS_NUMBER_TAG 1
-#define JS_STRING_TAG 2
-#define JS_BOOL_TAG 3
-#define JS_FUNCTION_TAG 4
-#define JS_OBJECT_TAG 5
-#define JS_ARRAY_TAG 6
+#define JS_INVALID_TAG 0
+#define JS_UNDEFINED_TAG 1
+#define JS_NULL_TAG 2
+#define JS_NUMBER_TAG 3
+#define JS_STRING_TAG 4
+#define JS_BOOL_TAG 5
+#define JS_FUNCTION_TAG 6
+#define JS_OBJECT_TAG 7
+#define JS_ARRAY_TAG 8
 
 #define JS_NUMBER(X) ((JS_VAL) {JS_NUMBER_TAG, {.number = X}})
 #define JS_STRING(X) ((JS_VAL) {JS_STRING_TAG, {.string = X}})
@@ -72,6 +74,7 @@ typedef JS_VAL (*js_func)(JS_VAL, ...);
 #define JS_OBJECT(X) ((JS_VAL) {JS_OBJECT_TAG, {.object = hashmap_new()}})
 #define JS_ARRAY(X) ((JS_VAL) {JS_ARRAY_TAG, {.array = X}})
 
+const JS_VAL JS_UNDEF;
 const JS_VAL JS_NULL;
 
 /**
@@ -165,6 +168,7 @@ JS_VAL JS_MUL_DOUBLE_DOUBLE(void **, JS_VAL, JS_VAL);
 #ifndef GUM_H
 #define GUM_H 1
 
+const JS_VAL JS_UNDEF = ((JS_VAL) {JS_UNDEFINED_TAG});
 const JS_VAL JS_NULL = ((JS_VAL) {JS_NULL_TAG});
 
 char *JS_VAL_STR (JS_VAL val) {
@@ -253,7 +257,7 @@ void destroy_globals() {
 
 JS_VAL module_0;
 
-int main () {
+int js_main () {
 	initialze_globals();
 	JS_CALL_FUNC(module_0);
 	destroy_globals();
