@@ -40,16 +40,32 @@ function translate (src) {
 				}
 				break;
 			case 'Program':
-				node.update('#include "gum.h"\n\n' + node.source());
+				node.update('#include "gum.h"\n\n' + node.source() + '\n\nint main() {\n\treturn js_main();\n}');
+				break;
+			case 'VariableDeclaration':
+				node.update(node.source().replace(/^var\b/, 'JSValue'));
+				break;
+			case 'ObjectExpression':
+				node.update('({ JSValue obj = JS_OBJECT(); ' +
+					node.properties.map(function (prop) {
+						return 'JS_SET_PROP(obj, ' + JSON.stringify(prop.key.source()) + ', &' + prop.value.source() + ');';
+					}).join(' ') +
+					' obj; })');
 				break;
 			case 'MemberExpression':
+				if (node.parent.type != 'CallExpression' || node.parent.callee != node) {
+					node.update('JS_GET_PROP(' + node.object.source() + ', ' + JSON.stringify(node.property.source()) + ')');
+				}
+				break;
+			case 'Property':
 			case 'BlockStatement':
 			case 'ReturnStatement':
 			case 'Identifier':
 			case 'ExpressionStatement':
+			case 'VariableDeclarator':
 				break;
 			default:
-				console.log(node.type);
+				console.error('Unknown node conversion:', node.type);
 		}
 	});
 }
