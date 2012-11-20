@@ -14,7 +14,7 @@
 typedef struct _hashmap_element{
 	char* key;
 	int in_use;
-	any_t data;
+	JSValue data;
 } hashmap_element;
 
 /* A hashmap has some maximum size and current size,
@@ -258,7 +258,7 @@ int hashmap_rehash(map_t in){
 /*
  * Add a pointer to the hashmap with some key
  */
-int hashmap_put(map_t in, char* key, any_t value){
+int hashmap_put(map_t in, char* key, JSValue value){
 	int index;
 	hashmap_map* m;
 
@@ -286,7 +286,7 @@ int hashmap_put(map_t in, char* key, any_t value){
 /*
  * Get your pointer out of the hashmap with a key
  */
-int hashmap_get(map_t in, char* key, any_t *arg){
+int hashmap_get(map_t in, char* key, JSValue *arg){
 	int curr;
 	int i;
 	hashmap_map* m;
@@ -311,7 +311,7 @@ int hashmap_get(map_t in, char* key, any_t *arg){
 		curr = (curr + 1) % m->table_size;
 	}
 
-	*arg = NULL;
+	*arg = (JSValue) {0};
 
 	/* Not found */
 	return MAP_MISSING;
@@ -319,10 +319,10 @@ int hashmap_get(map_t in, char* key, any_t *arg){
 
 /*
  * Iterate the function parameter over each element in the hashmap.  The
- * additional any_t argument is passed to the function as its first
+ * additional JSValue argument is passed to the function as its first
  * argument and the hashmap element is the second.
  */
-int hashmap_iterate(map_t in, PFany f, any_t item) {
+int hashmap_iterate(map_t in, PFany f, JSValue item) {
 	int i;
 
 	/* Cast the hashmap */
@@ -335,7 +335,7 @@ int hashmap_iterate(map_t in, PFany f, any_t item) {
 	/* Linear probing */
 	for(i = 0; i< m->table_size; i++)
 		if(m->data[i].in_use != 0) {
-			any_t data = (any_t) (m->data[i].data);
+			JSValue data = (JSValue) (m->data[i].data);
 			int status = f(item, data);
 			if (status != MAP_OK) {
 				return status;
@@ -367,7 +367,7 @@ int hashmap_remove(map_t in, char* key){
             if (strcmp(m->data[curr].key,key)==0){
                 /* Blank out the fields */
                 m->data[curr].in_use = 0;
-                m->data[curr].data = NULL;
+                m->data[curr].data = (JSValue) {0};
                 m->data[curr].key = NULL;
 
                 /* Reduce the size */

@@ -9,7 +9,7 @@ JS_DEFN(fac) {
 }
 
 JS_DEFN(module_0) {
-	JSValue a = ({ JSValue obj = JS_OBJECT(); JS_SET_PROP(obj, "b", &JS_NUMBER(5)); obj; });
+	JSValue a = ({ JSValue obj = JS_OBJECT(); JS_SET_PROP(obj, "b", JS_NUMBER(5)); obj; });
 	JS_CALL_METHOD(console, "log", JS_CALL_FUNC(fac, JS_GET_PROP(a, "b")));
 }
 

@@ -22,17 +22,35 @@
 typedef void *any_t;
 
 /*
- * PFany is a pointer to a function that can take two any_t arguments
- * and return an integer. Returns status code..
- */
-typedef int (*PFany)(any_t, any_t);
-
-/*
  * map_t is a pointer to an internally maintained data structure.
  * Clients of this package do not need to know how hashmaps are
  * represented.  They see and manipulate only map_t's.
  */
 typedef any_t map_t;
+
+/*
+ * JSValue struct
+ */
+#ifndef GUM_JSVALUE
+#define GUM_JSVALUE
+typedef struct JSValue_struct {
+	char tag;
+	union {
+		char boolean;
+		double number;
+		char *string;
+		void *function;
+		map_t object;
+		struct JSValue_struct *array;
+	};
+} JSValue;
+#endif
+
+/*
+ * PFany is a pointer to a function that can take two any_t arguments
+ * and return an integer. Returns status code..
+ */
+typedef int (*PFany)(JSValue, JSValue);
 
 /*
  * Return an empty hashmap. Returns NULL if empty.
@@ -46,17 +64,17 @@ extern map_t hashmap_new();
  * than MAP_OK the traversal is terminated. f must
  * not reenter any hashmap functions, or deadlock may arise.
  */
-extern int hashmap_iterate(map_t in, PFany f, any_t item);
+extern int hashmap_iterate(map_t in, PFany f, JSValue item);
 
 /*
  * Add an element to the hashmap. Return MAP_OK or MAP_OMEM.
  */
-extern int hashmap_put(map_t in, char* key, any_t value);
+extern int hashmap_put(map_t in, char* key, JSValue value);
 
 /*
  * Get an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
-extern int hashmap_get(map_t in, char* key, any_t *arg);
+extern int hashmap_get(map_t in, char* key, JSValue *arg);
 
 /*
  * Remove an element from the hashmap. Return MAP_OK or MAP_MISSING.
@@ -67,7 +85,7 @@ extern int hashmap_remove(map_t in, char* key);
  * Get any element. Return MAP_OK or MAP_MISSING.
  * remove - should the element be removed from the hashmap
  */
-extern int hashmap_get_one(map_t in, any_t *arg, int remove);
+extern int hashmap_get_one(map_t in, JSValue *arg, int remove);
 
 /*
  * Free the hashmap

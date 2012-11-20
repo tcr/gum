@@ -14,6 +14,8 @@
 
 #ifndef GUM_H
 
+#ifndef GUM_JSVALUE
+#define GUM_JSVALUE
 typedef struct JSValue_struct {
 	char tag;
 	union {
@@ -25,6 +27,7 @@ typedef struct JSValue_struct {
 		struct JSValue_struct *array;
 	};
 } JSValue;
+#endif
 
 typedef bool (*js_op_ptr)(void **, JSValue, JSValue);
 typedef JSValue (*jsvalue_op_ptr)(void **, JSValue, JSValue);
@@ -148,15 +151,15 @@ JSValue JS_MUL_DOUBLE_DOUBLE(void **, JSValue, JSValue);
 #define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL, ## __VA_ARGS__)
 
 #define JS_CALL_METHOD(OBJ, NAME, ...) ({ \
-	JSValue* value; \
-	hashmap_get(OBJ.object, NAME, (void **)(&value)); \
-	((js_func) value->function)(OBJ, ## __VA_ARGS__);  \
+	JSValue value; \
+	hashmap_get(OBJ.object, NAME, &value); \
+	((js_func) value.function)(OBJ, ## __VA_ARGS__);  \
 	})
 
 #define JS_GET_PROP(OBJ, NAME) ({ \
-	JSValue* value; \
-	hashmap_get(OBJ.object, NAME, (void **)(&value)); \
-	*value; \
+	JSValue value; \
+	hashmap_get(OBJ.object, NAME, &value); \
+	value; \
 	})
 
 #define JS_SET_PROP(OBJ, NAME, VAL) hashmap_put(OBJ.object, NAME, VAL);
@@ -254,7 +257,7 @@ JSValue console;
 void initialze_globals() {
 	// Setup console.
 	console = JS_OBJECT();
-	JS_SET_PROP(console, "log", &console_log);
+	JS_SET_PROP(console, "log", console_log);
 }
 
 void destroy_globals() {

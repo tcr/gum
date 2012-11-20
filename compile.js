@@ -48,7 +48,7 @@ function translate (src) {
 			case 'ObjectExpression':
 				node.update('({ JSValue obj = JS_OBJECT(); ' +
 					node.properties.map(function (prop) {
-						return 'JS_SET_PROP(obj, ' + JSON.stringify(prop.key.source()) + ', &' + prop.value.source() + ');';
+						return 'JS_SET_PROP(obj, ' + JSON.stringify(prop.key.source()) + ', ' + prop.value.source() + ');';
 					}).join(' ') +
 					' obj; })');
 				break;
