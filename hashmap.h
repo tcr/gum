@@ -28,23 +28,7 @@ typedef void *any_t;
  */
 typedef any_t map_t;
 
-/*
- * JSValue struct
- */
-#ifndef GUM_JSVALUE
-#define GUM_JSVALUE
-typedef struct JSValue_struct {
-	char tag;
-	union {
-		char boolean;
-		double number;
-		char *string;
-		void *function;
-		map_t object;
-		struct JSValue_struct *array;
-	};
-} JSValue;
-#endif
+#include "gum.h"
 
 /*
  * PFany is a pointer to a function that can take two any_t arguments

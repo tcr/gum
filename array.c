@@ -8,35 +8,27 @@
 
 #define DARRAYSIZE 5
 
-typedef struct js_array {
-    int max_size;
-    int cur_size;
-    JS_VAL *items;
-} JSArray;
-
-int  js_array_new(JSArray *);
-void js_array_add(JSArray *, JS_VAL);
-void js_array_destroy(JSArray *);
-bool  js_array_full(JSArray *);
-int  js_array_grow(JSArray *);
-void js_array_debug(JSArray *);
-
-//js_array_newialise the JSArray
-int js_array_new(JSArray *arr)
+//js_array_newialise the JSArray. Returns NULL on failure.
+JSArray *js_array_new()
 {
-    arr->items = (JS_VAL *) malloc(sizeof(JS_VAL) * DARRAYSIZE);
-    if (arr->items) {
-        arr->max_size = DARRAYSIZE;
-        arr->cur_size = 0;
-        return 0;
-    } else {
-        printf("Malloc failed!\n");
-        return 1;
-    }
+    JSArray* arr = (JSArray*) malloc(sizeof(JSArray));
+    if (!arr) goto err;
+
+    arr->items = (JSValue *) malloc(sizeof(JSValue) * DARRAYSIZE);
+    if (!arr->items) goto err;
+
+    arr->max_size = DARRAYSIZE;
+    arr->cur_size = 0;
+    return arr;
+
+    err:
+        if (arr)
+            js_array_destroy(arr);
+        return NULL;
 }
 
 //add the new val into the JSArray
-void js_array_add(JSArray *arr, JS_VAL val)
+void js_array_add(JSArray *arr, JSValue val)
 {
     if (!js_array_full(arr)) {
         arr->items[arr->cur_size++] = val;    
@@ -50,9 +42,9 @@ void js_array_add(JSArray *arr, JS_VAL val)
 void _js_array_vadd(JSArray *arr, ...) {
     va_list args;
     va_start(args, arr);
-    JS_VAL val;
+    JSValue val;
     while (true) {
-        val = va_arg(args, JS_VAL);
+        val = va_arg(args, JSValue);
         if (val.tag == 0) {
             break;
         }
@@ -60,8 +52,6 @@ void _js_array_vadd(JSArray *arr, ...) {
     }
     va_end(args);
 }
-
-#define js_array_vadd(X, ...) _js_array_vadd(X, __VA_ARGS__, NULL)
 
 //returns 1 if the DAarray is js_array_full(
 bool js_array_full(JSArray *arr)
@@ -74,15 +64,13 @@ bool js_array_full(JSArray *arr)
 //js_array_grow(s the JSArray to double its original size
 int js_array_grow(JSArray *arr)
 {
-    JS_VAL *temp = (JS_VAL *) realloc(arr->items, sizeof(*temp) * arr->max_size * 2);
+    JSValue *temp = (JSValue *) realloc(arr->items, sizeof(*temp) * arr->max_size * 2);
     if (!temp) {
         printf("Realloc failed!\n");
         return 1;
     } else {
         arr->items = temp;
         arr->max_size *= 2;
-        printf("Darray doubled and current contents are:\n");
-        js_array_debug(arr);
         return 0;
     }
 }
@@ -91,34 +79,24 @@ int js_array_grow(JSArray *arr)
 void js_array_destroy(JSArray *arr)
 {
     free(arr->items);
-    arr->items = 0;
-    arr->max_size = 0;
-    arr->cur_size = 0;
+    free(arr);
 }
 
-void js_array_debug(JSArray *arr) {
-    int i = 0;
-    printf("Max = %d; Cur = %d\n", arr->max_size, arr->cur_size);
-    for (i = 0; i < arr->cur_size; i++) {
-        printf("%s\t", JS_VAL_STR(arr->items[i]));
-    }
-    printf("\n");
-}
-
+/*
 int main(void)
 {
-    JSArray newDA;
-    if (!js_array_new(&newDA))
-    {
-        js_array_vadd(&newDA, JS_NUMBER(42), JS_STRING("hihihi"));
-        int i;
-        for (i = 1; i < 30; i++) {
-            js_array_add(&newDA, JS_NUMBER(i));
-        }
-    } else {
+    JSArray* newDA = js_array_new();
+    if (!js_array_new()) {
         exit(1);
     }
-    js_array_destroy(&newDA);
+
+    js_array_vadd(newDA, JS_NUMBER(42), JS_STRING("hihihi"));
+    int i;
+    for (i = 1; i < 30; i++) {
+        js_array_add(newDA, JS_NUMBER(i));
+    }
+    js_array_destroy(newDA);
 
     return 0;
 }
+*/

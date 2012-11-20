@@ -3,6 +3,7 @@
 #include <stdarg.h>
 
 #include "hashmap.h"
+#include "array.h"
 
 #define KEY_MAX_LENGTH (256)
 #define KEY_PREFIX ("somekey")
@@ -13,9 +14,8 @@
  */
 
 #ifndef GUM_H
+#define GUM_H 1
 
-#ifndef GUM_JSVALUE
-#define GUM_JSVALUE
 typedef struct JSValue_struct {
 	char tag;
 	union {
@@ -27,7 +27,6 @@ typedef struct JSValue_struct {
 		struct JSValue_struct *array;
 	};
 } JSValue;
-#endif
 
 typedef bool (*js_op_ptr)(void **, JSValue, JSValue);
 typedef JSValue (*jsvalue_op_ptr)(void **, JSValue, JSValue);
@@ -148,12 +147,14 @@ JSValue JS_MUL_DOUBLE_DOUBLE(void **, JSValue, JSValue);
 
 // calling conventions
 
-#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL, ## __VA_ARGS__)
+#define VA_ARGS(...) , ##__VA_ARGS__
+
+#define JS_CALL_FUNC(OBJ, ...) ((js_func) OBJ.function)(JS_NULL VA_ARGS(__VA_ARGS__))
 
 #define JS_CALL_METHOD(OBJ, NAME, ...) ({ \
 	JSValue value; \
 	hashmap_get(OBJ.object, NAME, &value); \
-	((js_func) value.function)(OBJ, ## __VA_ARGS__);  \
+	((js_func) value.function)(OBJ VA_ARGS(__VA_ARGS__));  \
 	})
 
 #define JS_GET_PROP(OBJ, NAME) ({ \
@@ -170,107 +171,6 @@ JSValue JS_MUL_DOUBLE_DOUBLE(void **, JSValue, JSValue);
 	JSValue NAME = JS_FUNCTION(_js_fn_ ## NAME); \
 	JSValue _js_fn_ ## NAME (JSValue this, ...)
 
-/**
- * C code
- */
-
-#ifndef GUM_H
-#define GUM_H 1
-
-const JSValue JS_UNDEF = ((JSValue) {JS_UNDEFINED_TAG});
-const JSValue JS_NULL = ((JSValue) {JS_NULL_TAG});
-
-char *JSValue_STR (JSValue val) {
-	switch (val.tag) {
-		case JS_NUMBER_TAG: return HPRINTF("%f", val.number);
-		case JS_STRING_TAG: return HPRINTF("%s", val.string);
-		case JS_BOOL_TAG: return HPRINTF("%s", val.boolean ? "true" : "false");
-		case JS_OBJECT_TAG: return HPRINTF("[object Object]");
-		case JS_FUNCTION_TAG: return HPRINTF("[function]");
-		default: return "null";
-	}
-}
-
-JS_LT_VARIANT(NUMBER_NUMBER, a.tag != b.tag, a.number < b.number);
-bool JS_LT_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
-		*op_cache_ptr = &JS_LT_NUMBER_NUMBER;
-	}
-	return ((js_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-JS_EQ_VARIANT(NUMBER_NUMBER, a.tag != b.tag, a.number == b.number);
-bool JS_EQ_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
-		*op_cache_ptr = &JS_EQ_NUMBER_NUMBER;
-	}
-	return ((js_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-JS_OR_VARIANT(BOOL_BOOL, a.tag != b.tag, a.number || b.number);
-bool JS_OR_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_BOOL_TAG && b.tag == JS_BOOL_TAG) {
-		*op_cache_ptr = &JS_OR_BOOL_BOOL;
-	}
-	return ((js_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-JS_ADD_VARIANT(DOUBLE_DOUBLE, a.tag != b.tag, JS_NUMBER(a.number + b.number));
-JS_ADD_VARIANT(DOUBLE_STRING, a.tag != JS_NUMBER_TAG || b.tag != JS_STRING_TAG, JS_STRING(HPRINTF("%f%s", a.number, b.string)));
-JSValue JS_ADD_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
-		*op_cache_ptr = &JS_ADD_DOUBLE_DOUBLE;
-	} else if (a.tag == JS_NUMBER_TAG && b.tag == JS_STRING_TAG) {
-		*op_cache_ptr = &JS_ADD_DOUBLE_STRING;
-	}
-	return ((jsvalue_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-JS_SUB_VARIANT(DOUBLE_DOUBLE, a.tag != b.tag, JS_NUMBER(a.number - b.number));
-JSValue JS_SUB_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
-		*op_cache_ptr = &JS_SUB_DOUBLE_DOUBLE;
-	}
-	return ((jsvalue_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-JS_MUL_VARIANT(DOUBLE_DOUBLE, a.tag != b.tag, JS_NUMBER(a.number * b.number));
-JSValue JS_MUL_SWITCH (void **op_cache_ptr, JSValue a, JSValue b) {
-	if (a.tag == JS_NUMBER_TAG && b.tag == JS_NUMBER_TAG) {
-		*op_cache_ptr = &JS_MUL_DOUBLE_DOUBLE;
-	}
-	return ((jsvalue_op_ptr) *op_cache_ptr)(op_cache_ptr, a, b);
-}
-
-/** 
- * Globals
- */
-
-JS_DEFN(console_log) {
-	VARGS(VARG(str));
-	printf("%s\n", JSValue_STR(str));
-	return JS_NULL;
-}
-
+char *JS_VAL_STR (JSValue val);
 JSValue console;
-
-void initialze_globals() {
-	// Setup console.
-	console = JS_OBJECT();
-	JS_SET_PROP(console, "log", console_log);
-}
-
-void destroy_globals() {
-	JS_OBJECT_FREE(console);
-}
-
 JSValue module_0;
-
-int js_main () {
-	initialze_globals();
-	JS_CALL_FUNC(module_0);
-	destroy_globals();
-	return 0;
-}
-
-#endif

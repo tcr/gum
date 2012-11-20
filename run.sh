@@ -1,2 +1,2 @@
 node compile.js > test.c
-gcc hashmap.c test.c -O3 -o test && strip test && time ./test
+gcc array.c hashmap.c gum.c test.c -O3 -o test && strip test && time ./test
