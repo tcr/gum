@@ -6,6 +6,5 @@ function fac (n) {
 }
 
 function module_0 () {
-	var a = {b: fac,};
-	console.log(a.b(5));
+	console.log(fac(5));
 }
