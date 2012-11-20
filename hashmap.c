@@ -24,6 +24,7 @@ typedef struct _hashmap_map{
 	int table_size;
 	int size;
 	hashmap_element *data;
+	struct _hashmap_map *proto;
 } hashmap_map;
 
 /*
@@ -312,6 +313,10 @@ int hashmap_get(map_t in, char* key, JSValue *arg){
 		curr = (curr + 1) % m->table_size;
 	}
 
+	if (m->proto) {
+		return hashmap_get(m->proto, key, arg);
+	}
+
 	*arg = (JSValue) {0};
 
 	/* Not found */
@@ -388,6 +393,14 @@ void hashmap_free(map_t in){
 	hashmap_map* m = (hashmap_map*) in;
 	free(m->data);
 	free(m);
+}
+
+/* prototype */
+int hashmap_set_proto(map_t in, map_t proto){
+	hashmap_map* m;
+	/* Cast the hashmap */
+	m = (hashmap_map *) in;
+	m->proto = proto;
 }
 
 /* Return the length of the hashmap */

@@ -10,7 +10,8 @@ JS_DEFN(fac) {
 
 JS_DEFN(module_0) {
 	JSValue a = ({ JSValue obj = JS_OBJECT(); JS_SET_PROP(obj, "b", fac); obj; });
-	JS_CALL_METHOD(console, "log", JS_CALL_METHOD(a, "b", JS_NUMBER(5)));
+	hashmap_set_proto(a.object, console.object);
+	JS_CALL_METHOD(a, "log", JS_CALL_METHOD(a, "b", JS_NUMBER(5)));
 }
 
 int main() {
