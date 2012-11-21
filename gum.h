@@ -73,7 +73,11 @@ typedef JSValue (*js_func)(JSValue, ...);
 #define JS_STRING(X) ((JSValue) {JS_STRING_TAG, {.string = X}})
 #define JS_BOOL(X) ((JSValue) {JS_BOOL_TAG, {.boolean = X}})
 #define JS_FUNCTION(X) ((JSValue) {JS_FUNCTION_TAG, {.function = X}})
-#define JS_OBJECT() ((JSValue) {JS_OBJECT_TAG, {.object = hashmap_new()}})
+#define JS_OBJECT() ({ \
+ 	JSValue obj = ((JSValue) {JS_OBJECT_TAG, {.object = hashmap_new()}}); \
+ 	hashmap_set_proto(obj.object, _object_prototype.object); \
+ 	obj; \
+ 	})
 #define JS_ARRAY(X) ((JSValue) {JS_ARRAY_TAG, {.array = X}})
 
 const JSValue JS_UNDEF;
@@ -174,3 +178,4 @@ JSValue JS_MUL_DOUBLE_DOUBLE(void **, JSValue, JSValue);
 char *JS_VAL_STR (JSValue val);
 JSValue console;
 JSValue module_0;
+JSValue _object_prototype;

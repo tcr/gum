@@ -76,8 +76,12 @@ JS_DEFN(console_log) {
 }
 
 JSValue console;
+JSValue _object_prototype;
 
 void initialze_globals() {
+	// Object prototypes.
+	_object_prototype = ((JSValue) {JS_OBJECT_TAG, {.object = hashmap_new()}});
+
 	// Setup console.
 	console = JS_OBJECT();
 	JS_SET_PROP(console, "log", console_log);
