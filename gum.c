@@ -93,6 +93,7 @@ void destroy_globals() {
 
 JSValue module_0;
 
+// TODO (Separate js_main function): This should be in its own file.
 int js_main () {
 	initialze_globals();
 	JS_CALL_FUNC(module_0);
