@@ -1,5 +1,7 @@
 #include "gum.h"
 
+// TODO (Delete test-generated code from repo): This doesn't belong here.
+
 JS_DEFN(fac) {
 	VARGS(VARG(n));
 	if (JS_BOOL(JS_OR(JS_BOOL(JS_EQ(n, JS_NUMBER(1))), JS_BOOL(JS_EQ(n, JS_NUMBER(0))))).boolean) {
